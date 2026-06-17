@@ -32,10 +32,11 @@ public class TaskController {
         }
 
         User user = userRepository.findByLoginId(req.getLoginId())
-                .orElseGet(() -> {
-                    User u = new User(req.getUserName(), req.getLoginId(), req.getPassword());
-                    return userRepository.save(u);
-                });
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         Task task = new Task(req.getTaskName(), user);
         Task saved = taskRepository.save(task);
@@ -46,6 +47,30 @@ public class TaskController {
     public ResponseEntity<List<Task>> getTasksForUser(@PathVariable String loginId) {
         List<Task> tasks = taskRepository.findByUser_LoginId(loginId);
         return ResponseEntity.ok(tasks);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest req) {
+        if (req.getTaskName() == null || req.getTaskName().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return taskRepository.findById(id)
+                .map(task -> {
+                    task.setTaskName(req.getTaskName());
+                    Task updated = taskRepository.save(task);
+                    return ResponseEntity.ok(updated);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        if (taskRepository.existsById(id)) {
+            taskRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 }
 
