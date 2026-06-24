@@ -2,9 +2,8 @@ package com.api.tasklist.controller;
 
 import com.api.tasklist.dto.TaskRequest;
 import com.api.tasklist.entity.Task;
-import com.api.tasklist.entity.User;
-import com.api.tasklist.repository.TaskRepository;
-import com.api.tasklist.repository.UserRepository;
+import com.api.tasklist.service.TaskService;
+import com.api.tasklist.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,62 +19,47 @@ public class TaskController {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
 
-    private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final TaskService taskService;
 
     @Autowired
-    public TaskController(TaskRepository taskRepository, UserRepository userRepository) {
-        this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
+    public TaskController(TaskService taskService, UserService userService) {
+        this.taskService = taskService;
     }
 
     @PostMapping
     public ResponseEntity<Task> addTask(@RequestBody TaskRequest req) {
         logger.info("Add task={} for loginId={}", req.getTaskName(), req.getLoginId());
-        if (req.getLoginId() == null || req.getTaskName() == null) {
-            logger.debug("Loginid or taskname is null");
+        try{
+            Task created = taskService.createTask(req.getLoginId(), req.getTaskName());
+            return ResponseEntity.created(URI.create("/api/tasks/" + created.getId())).body(created);
+        }catch (Exception e){
+            logger.error("Error creating task for loginId={}: {}", req.getLoginId(), e.getMessage());
             return ResponseEntity.badRequest().build();
         }
-
-        User user = userRepository.findByLoginId(req.getLoginId())
-                .orElse(null);
-
-        if (user == null) {
-            logger.warn("Attempt to add task for an unknown loginid={}", req.getLoginId());
-            return ResponseEntity.badRequest().build();
-        }
-
-        Task task = new Task(req.getTaskName(), user);
-        Task saved = taskRepository.save(task);
-        logger.info("Task created with id={} for loginid={}", saved.getId(), req.getLoginId());
-        return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
     }
 
     @GetMapping("/{loginId}")
     public ResponseEntity<List<Task>> getTasksForUser(@PathVariable String loginId) {
-        List<Task> tasks = taskRepository.findByUser_LoginId(loginId);
+        List<Task> tasks = taskService.getTasksForUser(loginId);
         return ResponseEntity.ok(tasks);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest req) {
-        if (req.getTaskName() == null || req.getTaskName().isEmpty()) {
+        try{
+            return taskService.updateTask(id, req.getTaskName())
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        }catch (Exception e){
+            logger.error("Error updating task with id={}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
 
-        return taskRepository.findById(id)
-                .map(task -> {
-                    task.setTaskName(req.getTaskName());
-                    Task updated = taskRepository.save(task);
-                    return ResponseEntity.ok(updated);
-                })
-                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        if (taskRepository.existsById(id)) {
-            taskRepository.deleteById(id);
+        if (taskService.deleteTask(id)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

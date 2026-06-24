@@ -2,7 +2,7 @@ package com.api.tasklist.controller;
 
 import com.api.tasklist.dto.RegisterRequest;
 import com.api.tasklist.entity.User;
-import com.api.tasklist.repository.UserRepository;
+import com.api.tasklist.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,35 +20,32 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    public UserController(UserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         logger.info("Received registration request: loginId={}, email={}", req.getLoginId(), req.getEmail());
-        if (req.getLoginId() == null || req.getLoginId().trim().isEmpty()
-                || req.getPassword() == null || req.getPassword().trim().isEmpty()) {
-            logger.warn("Invalid registration request: loginId or password is missing");
-            return ResponseEntity.badRequest().body("loginId and password are required");
+        User user;
+        try{
+            user = userService.register(req.getLoginId(), req.getEmail(), req.getPassword());
+        }catch (IllegalArgumentException e){
+            logger.warn("Invalid registration request: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }catch (IllegalStateException e){
+            logger.warn("Registration request failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }catch (Exception e){
+            logger.error("Unexpected error during registration: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
-
-        if (userRepository.findByLoginId(req.getLoginId()).isPresent()) {
-            logger.warn("Registration request failed: loginId already exists");
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("loginId already exists");
-        }
-
-        String hashed = passwordEncoder.encode(req.getPassword());
-        User user = new User(req.getEmail(), req.getLoginId(), hashed);
-        User saved = userRepository.save(user);
 
         logger.info("User registered successfully: loginId={}", req.getLoginId());
-        return ResponseEntity.created(URI.create("/api/users/" + saved.getId())).body(saved);
+        return ResponseEntity.created(URI.create("/api/users/" + user.getId())).body(user);
     }
 }
 
