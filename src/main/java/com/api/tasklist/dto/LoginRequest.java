@@ -1,18 +1,9 @@
 package com.api.tasklist.dto;
 
-public class RegisterRequest {
+public class LoginRequest {
 
-    private String email;
     private String loginId;
     private String password;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
 
     public String getLoginId() {
         return loginId;
@@ -30,4 +21,3 @@ public class RegisterRequest {
         this.password = password;
     }
 }
-

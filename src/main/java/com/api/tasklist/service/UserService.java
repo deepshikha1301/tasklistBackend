@@ -39,4 +39,22 @@ public class UserService {
         logger.info("User registered successfully: loginId={}", loginId);
         return saved;
     }
+
+    @Transactional(readOnly = true)
+    public User login(String loginId, String password) {
+        if (loginId == null || loginId.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("loginId and password are required");
+        }
+
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid loginId or password"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            logger.warn("Login failed: incorrect password for loginId={}", loginId);
+            throw new IllegalArgumentException("Invalid loginId or password");
+        }
+
+        logger.info("User logged in successfully: loginId={}", loginId);
+        return user;
+    }
 }

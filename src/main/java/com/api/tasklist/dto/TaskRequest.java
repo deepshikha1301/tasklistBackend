@@ -4,9 +4,6 @@ public class TaskRequest {
     private String loginId;
     private String taskName;
 
-    public TaskRequest() {
-    }
-
     public String getLoginId() {
         return loginId;
     }

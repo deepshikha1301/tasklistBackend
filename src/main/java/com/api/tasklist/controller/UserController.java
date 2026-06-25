@@ -1,5 +1,6 @@
 package com.api.tasklist.controller;
 
+import com.api.tasklist.dto.LoginRequest;
 import com.api.tasklist.dto.RegisterRequest;
 import com.api.tasklist.entity.User;
 import com.api.tasklist.service.UserService;
@@ -46,6 +47,22 @@ public class UserController {
 
         logger.info("User registered successfully: loginId={}", req.getLoginId());
         return ResponseEntity.created(URI.create("/api/users/" + user.getId())).body(user);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req){
+        logger.info("Received login request: loginId={}", req.getLoginId());
+        try{
+            User user = userService.login(req.getLoginId(), req.getPassword());
+            logger.info("User logged in successfully: loginId={}", req.getLoginId());
+            return ResponseEntity.ok(user);
+        }catch (IllegalArgumentException e){
+            logger.warn("Login request failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }catch (Exception e){
+            logger.error("Unexpected error during login: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+        }
     }
 }
 
