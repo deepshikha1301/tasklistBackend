@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
+@CrossOrigin(origins = "http://localhost:4200")
 public class TaskController {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
@@ -39,8 +40,8 @@ public class TaskController {
     }
 
     @GetMapping("/{loginId}")
-    public ResponseEntity<List<Task>> getTasksForUser(@PathVariable String loginId) {
-        List<Task> tasks = taskService.getTasksForUser(loginId);
+    public ResponseEntity<List<String>> getTasksForUser(@PathVariable String loginId) {
+        List<String> tasks = taskService.getTasksForUser(loginId);
         return ResponseEntity.ok(tasks);
     }
 

@@ -42,8 +42,9 @@ public class TaskService {
         return saved;
     }
 
-    public List<Task> getTasksForUser(String loginId) {
-        return taskRepository.findByUser_LoginId(loginId);
+    public List<String> getTasksForUser(String loginId) {
+        List<Task> userTasks = taskRepository.findByUser_LoginId(loginId);
+        return userTasks.stream().map(Task::getTaskName).toList();
     }
 
     @Transactional
