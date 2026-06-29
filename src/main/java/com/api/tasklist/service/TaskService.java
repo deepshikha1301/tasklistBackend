@@ -61,11 +61,16 @@ public class TaskService {
     }
 
     @Transactional
-    public boolean deleteTask(Long id) {
-        if (taskRepository.existsById(id)) {
-            taskRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public boolean deleteTaskByLoginIdAndTaskName(String loginId, String taskName) {
+        return taskRepository.findByUser_LoginIdAndTaskName(loginId, taskName)
+                .map(task -> {
+                    taskRepository.delete(task);
+                    logger.info("Task deleted: taskName={} for loginId={}", taskName, loginId);
+                    return true;
+                })
+                .orElseGet(() -> {
+                    logger.warn("Task not found: taskName={} for loginId={}", taskName, loginId);
+                    return false;
+                });
     }
 }

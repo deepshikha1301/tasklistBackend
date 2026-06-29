@@ -58,12 +58,19 @@ public class TaskController {
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        if (taskService.deleteTask(id)) {
-            return ResponseEntity.noContent().build();
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteTaskByLoginIdAndTaskName(
+            @RequestBody TaskRequest req) {
+        logger.info("Delete task={} for loginId={}", req.getTaskName(), req.getLoginId());
+        try {
+            if (taskService.deleteTaskByLoginIdAndTaskName(req.getLoginId(), req.getTaskName())) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error deleting task for loginId={}: {}", req.getLoginId(), e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.notFound().build();
     }
 }
 
