@@ -1,8 +1,13 @@
 package com.api.tasklist.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginRequest {
 
+    @NotBlank(message="login id is required")
     private String loginId;
+
+    @NotBlank(message="password is required")
     private String password;
 
     public String getLoginId() {

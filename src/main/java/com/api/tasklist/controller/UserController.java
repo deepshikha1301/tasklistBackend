@@ -4,6 +4,7 @@ import com.api.tasklist.dto.LoginRequest;
 import com.api.tasklist.dto.RegisterRequest;
 import com.api.tasklist.entity.User;
 import com.api.tasklist.service.UserService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
         logger.info("Received registration request: loginId={}, email={}", req.getLoginId(), req.getEmail());
         User user;
         try{
@@ -50,7 +51,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest req){
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
         logger.info("Received login request: loginId={}", req.getLoginId());
         try{
             User user = userService.login(req.getLoginId(), req.getPassword());
