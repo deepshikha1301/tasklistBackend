@@ -24,7 +24,7 @@ public class UserController {
     private final UserService userService;
 
     @Autowired
-    public UserController(UserService userService, PasswordEncoder passwordEncoder) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
@@ -52,16 +52,13 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
         logger.info("Received login request: loginId={}", req.getLoginId());
-        try{
-            User user = userService.login(req.getLoginId(), req.getPassword());
+        String result = userService.login(req);
+        if("Failed".equals(result)){
+            logger.warn("Login request failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }else{
             logger.info("User logged in successfully: loginId={}", req.getLoginId());
-            return ResponseEntity.ok(user);
-        }catch (IllegalArgumentException e){
-            logger.warn("Login request failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        }catch (Exception e){
-            logger.error("Unexpected error during login: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+            return ResponseEntity.ok(result);
         }
     }
 }
