@@ -17,11 +17,11 @@ public class JwtService {
 
     private String secretKey = "secret2026keysecret2026keysecret2026keysecret2026key";
 
-    public String generateToken(String username){
+    public Map<String, String> generateToken(String username){
 
         Map<String, Object> claims = new HashMap<>();
 
-        return Jwts.builder()
+        String jwtToken =  Jwts.builder()
                 .claims()
                 .add(claims)
                 .subject(username)
@@ -30,6 +30,9 @@ public class JwtService {
                 .and()
                 .signWith(getKey())
                 .compact();
+        Map<String, String> token = new HashMap<>();
+        token.put("token", jwtToken);
+        return token;
     }
 
     public String extractUsername(String token) {

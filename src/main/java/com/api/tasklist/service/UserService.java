@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 public class UserService implements UserDetailsService {
 
@@ -56,7 +58,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional(readOnly = true)
-    public String login(LoginRequest req) {
+    public Map<String, String> login(LoginRequest req) {
 
         Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.getLoginId(), req.getPassword())
@@ -64,7 +66,7 @@ public class UserService implements UserDetailsService {
         if(authentication.isAuthenticated()){
             return jwtService.generateToken(req.getLoginId());
         }
-        return "Failed";
+        return Map.of("token", "Failed");
     }
 
     @Override

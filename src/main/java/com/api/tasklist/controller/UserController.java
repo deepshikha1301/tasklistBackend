@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -52,8 +53,8 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
         logger.info("Received login request: loginId={}", req.getLoginId());
-        String result = userService.login(req);
-        if("Failed".equals(result)){
+        Map<String, String> result = userService.login(req);
+        if("Failed".equals(result.get("token"))){
             logger.warn("Login request failed");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }else{
