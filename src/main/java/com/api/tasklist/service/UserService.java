@@ -1,6 +1,7 @@
 package com.api.tasklist.service;
 
 import com.api.tasklist.dto.LoginRequest;
+import com.api.tasklist.entity.RefreshToken;
 import com.api.tasklist.entity.User;
 import com.api.tasklist.model.UserPrincipal;
 import com.api.tasklist.repository.UserRepository;
@@ -30,14 +31,17 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                       @Lazy AuthenticationManager authenticationManager, JwtService jwtService) {
+                       @Lazy AuthenticationManager authenticationManager, JwtService jwtService,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -64,9 +68,11 @@ public class UserService implements UserDetailsService {
                     new UsernamePasswordAuthenticationToken(req.getLoginId(), req.getPassword())
                 );
         if(authentication.isAuthenticated()){
-            return jwtService.generateToken(req.getLoginId());
+            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.getLoginId());
+            String accessToken = jwtService.generateToken(req.getLoginId());
+            return Map.of("access_token", accessToken, "refresh_token", refreshToken.getTokenId());
         }
-        return Map.of("token", "Failed");
+        return Map.of("access_token", "Failed");
     }
 
     @Override

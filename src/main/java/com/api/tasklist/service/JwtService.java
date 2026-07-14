@@ -17,7 +17,7 @@ public class JwtService {
 
     private String secretKey = "secret2026keysecret2026keysecret2026keysecret2026key";
 
-    public Map<String, String> generateToken(String username){
+    public String generateToken(String username){
 
         Map<String, Object> claims = new HashMap<>();
 
@@ -26,13 +26,11 @@ public class JwtService {
                 .add(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))// 10 hours
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60))// 1 min
                 .and()
                 .signWith(getKey())
                 .compact();
-        Map<String, String> token = new HashMap<>();
-        token.put("token", jwtToken);
-        return token;
+        return jwtToken;
     }
 
     public String extractUsername(String token) {

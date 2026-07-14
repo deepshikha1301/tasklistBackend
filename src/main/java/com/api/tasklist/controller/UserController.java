@@ -1,8 +1,11 @@
 package com.api.tasklist.controller;
 
 import com.api.tasklist.dto.LoginRequest;
+import com.api.tasklist.dto.RefreshTokenRequest;
 import com.api.tasklist.dto.RegisterRequest;
 import com.api.tasklist.entity.User;
+import com.api.tasklist.service.JwtService;
+import com.api.tasklist.service.RefreshTokenService;
 import com.api.tasklist.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -23,10 +26,14 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RefreshTokenService refreshTokenService, JwtService jwtService) {
         this.userService = userService;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -61,6 +68,21 @@ public class UserController {
             logger.info("User logged in successfully: loginId={}", req.getLoginId());
             return ResponseEntity.ok(result);
         }
+    }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request){
+        return refreshTokenService.findByTokenId(request.getRefreshTokenId())
+                .map(refreshTokenService::verifyTokenExpiration)
+                .map(
+                        token -> {
+                            String newAccessToken = jwtService.generateToken(token.getUser().getLoginId());
+                            logger.info("Access token refreshed successfully for user: loginId={}", token.getUser().getLoginId());
+                            return ResponseEntity.ok(Map.of("access_token", newAccessToken, "refresh_token", request.getRefreshTokenId() ));
+                        }).orElseThrow(()-> {
+                            logger.warn("Refresh token not found or expired: refreshTokenId={}", request.getRefreshTokenId());
+                            return new RuntimeException("Refresh token not found or expired, please login again");
+                        });
     }
 }
 
