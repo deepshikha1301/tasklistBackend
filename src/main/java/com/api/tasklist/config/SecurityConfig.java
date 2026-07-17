@@ -70,6 +70,9 @@ public class SecurityConfig {
         // Allow standard and custom HTTP headers transmitted by frontend applications
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
 
+        // Allow credentials (cookies, authorization headers) to be included in cross-origin requests
+        configuration.setAllowCredentials(true);
+
         // Bind these properties universally across all application API paths
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

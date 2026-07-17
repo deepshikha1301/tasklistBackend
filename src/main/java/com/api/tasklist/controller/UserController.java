@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -61,26 +63,36 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
         logger.info("Received login request: loginId={}", req.getLoginId());
         Map<String, String> result = userService.login(req);
-        if("Failed".equals(result.get("token"))){
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", result.get("refresh_token"))
+                .httpOnly(true)
+                .secure(false) // only for dev environment
+                .path("/api/users/refreshToken")
+                .maxAge(7 * 24 * 60 * 60) // 7 days
+                .sameSite("Strict")
+                .build();
+        if("Failed".equals(result.get("access_token"))){
             logger.warn("Login request failed");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }else{
             logger.info("User logged in successfully: loginId={}", req.getLoginId());
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok()
+                            .header("Set-Cookie", cookie.toString())
+                            .body(Map.of("access_token", result.get("access_token")));
         }
     }
 
     @PostMapping("/refreshToken")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request){
-        return refreshTokenService.findByTokenId(request.getRefreshTokenId())
+    public ResponseEntity<?> refreshToken(@CookieValue(name="refresh_token") String refreshToken){
+        logger.info("refresh token request------" + refreshToken);
+        return refreshTokenService.findByTokenId(refreshToken)
                 .map(refreshTokenService::verifyTokenExpiration)
                 .map(
                         token -> {
                             String newAccessToken = jwtService.generateToken(token.getUser().getLoginId());
                             logger.info("Access token refreshed successfully for user: loginId={}", token.getUser().getLoginId());
-                            return ResponseEntity.ok(Map.of("access_token", newAccessToken, "refresh_token", request.getRefreshTokenId() ));
+                            return ResponseEntity.ok(Map.of("access_token", newAccessToken));
                         }).orElseThrow(()-> {
-                            logger.warn("Refresh token not found or expired: refreshTokenId={}", request.getRefreshTokenId());
+                            logger.warn("Refresh token not found or expired: refreshTokenId={}", refreshToken);
                             return new RuntimeException("Refresh token not found or expired, please login again");
                         });
     }
