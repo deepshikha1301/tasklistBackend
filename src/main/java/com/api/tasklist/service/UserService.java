@@ -3,6 +3,8 @@ package com.api.tasklist.service;
 import com.api.tasklist.dto.LoginRequest;
 import com.api.tasklist.entity.RefreshToken;
 import com.api.tasklist.entity.User;
+import com.api.tasklist.exception.NoSuchUserException;
+import com.api.tasklist.exception.UserAlreadyExistsException;
 import com.api.tasklist.model.UserPrincipal;
 import com.api.tasklist.repository.UserRepository;
 import org.jspecify.annotations.NonNull;
@@ -46,14 +48,9 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User register(String loginId, String email, String password) {
-        if (loginId == null || loginId.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("loginId and password are required");
-        }
-
         if (userRepository.findByLoginId(loginId).isPresent()) {
-            throw new IllegalStateException("loginId already exists");
+            throw new UserAlreadyExistsException("loginId already exists");
         }
-
         String hashed = passwordEncoder.encode(password);
         User user = new User(email, loginId, hashed);
         User saved = userRepository.save(user);
@@ -63,6 +60,10 @@ public class UserService implements UserDetailsService {
 
     @Transactional(readOnly = true)
     public Map<String, String> login(LoginRequest req) {
+
+        if (userRepository.findByLoginId(req.getLoginId()).isEmpty()) {
+            throw new NoSuchUserException("User not found with loginId: " + req.getLoginId());
+        }
 
         Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.getLoginId(), req.getPassword())

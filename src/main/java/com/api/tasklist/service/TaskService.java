@@ -2,6 +2,7 @@ package com.api.tasklist.service;
 
 import com.api.tasklist.entity.Task;
 import com.api.tasklist.entity.User;
+import com.api.tasklist.exception.NoSuchUserException;
 import com.api.tasklist.repository.TaskRepository;
 import com.api.tasklist.repository.UserRepository;
 import org.slf4j.Logger;
@@ -29,12 +30,8 @@ public class TaskService {
 
     @Transactional
     public Task createTask(String loginId, String taskName) {
-        if (loginId == null || loginId.trim().isEmpty() || taskName == null || taskName.trim().isEmpty()) {
-            throw new IllegalArgumentException("loginId and taskName are required");
-        }
-
         User user = userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found for loginId: " + loginId));
+                .orElseThrow(() -> new NoSuchUserException("User not found for loginId: " + loginId));
 
         Task task = new Task(taskName, user);
         Task saved = taskRepository.save(task);

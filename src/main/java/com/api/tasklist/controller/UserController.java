@@ -1,7 +1,6 @@
 package com.api.tasklist.controller;
 
 import com.api.tasklist.dto.LoginRequest;
-import com.api.tasklist.dto.RefreshTokenRequest;
 import com.api.tasklist.dto.RegisterRequest;
 import com.api.tasklist.entity.User;
 import com.api.tasklist.service.JwtService;
@@ -11,14 +10,11 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.Map;
 
 @RestController
@@ -39,24 +35,9 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        logger.info("Received registration request: loginId={}, email={}", req.getLoginId(), req.getEmail());
-        User user;
-        try{
-            user = userService.register(req.getLoginId(), req.getEmail(), req.getPassword());
-        }catch (IllegalArgumentException e){
-            logger.warn("Invalid registration request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }catch (IllegalStateException e){
-            logger.warn("Registration request failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }catch (Exception e){
-            logger.error("Unexpected error during registration: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
-        }
+    public User register(@Valid @RequestBody RegisterRequest req) {
+        return userService.register(req.getLoginId(), req.getEmail(), req.getPassword());
 
-        logger.info("User registered successfully: loginId={}", req.getLoginId());
-        return ResponseEntity.created(URI.create("/api/users/" + user.getId())).body(user);
     }
 
     @PostMapping("/login")
