@@ -36,13 +36,13 @@ public class UserController {
 
     @PostMapping("/register")
     public User register(@Valid @RequestBody RegisterRequest req) {
-        return userService.register(req.getLoginId(), req.getEmail(), req.getPassword());
+        return userService.register(req.loginId(), req.email(), req.password());
 
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
-        logger.info("Received login request: loginId={}", req.getLoginId());
+        logger.info("Received login request: loginId={}", req.loginId());
         Map<String, String> result = userService.login(req);
         ResponseCookie cookie = ResponseCookie.from("refresh_token", result.get("refresh_token"))
                 .httpOnly(true)
@@ -55,7 +55,7 @@ public class UserController {
             logger.warn("Login request failed");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }else{
-            logger.info("User logged in successfully: loginId={}", req.getLoginId());
+            logger.info("User logged in successfully: loginId={}", req.loginId());
             return ResponseEntity.ok()
                             .header("Set-Cookie", cookie.toString())
                             .body(Map.of("access_token", result.get("access_token")));

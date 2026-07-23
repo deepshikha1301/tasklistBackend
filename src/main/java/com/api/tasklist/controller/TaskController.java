@@ -28,12 +28,12 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<Task> addTask(@RequestBody TaskRequest req) {
-        logger.info("Add task={} for loginId={}", req.getTaskName(), req.getLoginId());
+        logger.info("Add task={} for loginId={}", req.taskName(), req.loginId());
         try{
-            Task created = taskService.createTask(req.getLoginId(), req.getTaskName());
+            Task created = taskService.createTask(req.loginId(), req.taskName());
             return ResponseEntity.created(URI.create("/api/tasks/" + created.getId())).body(created);
         }catch (Exception e){
-            logger.error("Error creating task for loginId={}: {}", req.getLoginId(), e.getMessage());
+            logger.error("Error creating task for loginId={}: {}", req.loginId(), e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -47,7 +47,7 @@ public class TaskController {
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest req) {
         try{
-            return taskService.updateTask(id, req.getTaskName())
+            return taskService.updateTask(id, req.taskName())
                     .map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());
         }catch (Exception e){
@@ -60,14 +60,14 @@ public class TaskController {
     @DeleteMapping("/delete")
     public ResponseEntity<Void> deleteTaskByLoginIdAndTaskName(
             @RequestBody TaskRequest req) {
-        logger.info("Delete task={} for loginId={}", req.getTaskName(), req.getLoginId());
+        logger.info("Delete task={} for loginId={}", req.taskName(), req.loginId());
         try {
-            if (taskService.deleteTaskByLoginIdAndTaskName(req.getLoginId(), req.getTaskName())) {
+            if (taskService.deleteTaskByLoginIdAndTaskName(req.loginId(), req.taskName())) {
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            logger.error("Error deleting task for loginId={}: {}", req.getLoginId(), e.getMessage());
+            logger.error("Error deleting task for loginId={}: {}", req.loginId(), e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

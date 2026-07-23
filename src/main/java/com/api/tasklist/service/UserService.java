@@ -61,16 +61,16 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public Map<String, String> login(LoginRequest req) {
 
-        if (userRepository.findByLoginId(req.getLoginId()).isEmpty()) {
-            throw new NoSuchUserException("User not found with loginId: " + req.getLoginId());
+        if (userRepository.findByLoginId(req.loginId()).isEmpty()) {
+            throw new NoSuchUserException("User not found with loginId: " + req.loginId());
         }
 
         Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getLoginId(), req.getPassword())
+                    new UsernamePasswordAuthenticationToken(req.loginId(), req.password())
                 );
         if(authentication.isAuthenticated()){
-            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.getLoginId());
-            String accessToken = jwtService.generateToken(req.getLoginId());
+            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.loginId());
+            String accessToken = jwtService.generateToken(req.loginId());
             return Map.of("access_token", accessToken, "refresh_token", refreshToken.getTokenId());
         }
         return Map.of("access_token", "Failed");
