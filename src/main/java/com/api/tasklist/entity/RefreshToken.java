@@ -10,7 +10,7 @@ public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private String tokenId;
+    private String token;
     private Instant expiryDate;
 
     @OneToOne
@@ -21,7 +21,7 @@ public class RefreshToken {
 
     public RefreshToken(int id, String token, Instant expiryDate, User user) {
         this.id = id;
-        this.tokenId = token;
+        this.token = token;
         this.expiryDate = expiryDate;
         this.user = user;
     }
@@ -34,12 +34,12 @@ public class RefreshToken {
         this.id = id;
     }
 
-    public String getTokenId() {
-        return tokenId;
+    public String getToken() {
+        return token;
     }
 
-    public void setTokenId(String tokenId) {
-        this.tokenId = tokenId;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public Instant getExpiryDate() {

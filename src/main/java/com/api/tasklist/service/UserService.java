@@ -58,7 +58,7 @@ public class UserService implements UserDetailsService {
         return saved;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Map<String, String> login(LoginRequest req) {
 
         if (userRepository.findByLoginId(req.loginId()).isEmpty()) {
@@ -71,7 +71,7 @@ public class UserService implements UserDetailsService {
         if(authentication.isAuthenticated()){
             RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.loginId());
             String accessToken = jwtService.generateToken(req.loginId());
-            return Map.of("access_token", accessToken, "refresh_token", refreshToken.getTokenId());
+            return Map.of("access_token", accessToken, "refresh_token", refreshToken.getToken());
         }
         return Map.of("access_token", "Failed");
     }

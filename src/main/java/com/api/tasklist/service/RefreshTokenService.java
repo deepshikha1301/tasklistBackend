@@ -24,15 +24,15 @@ public class RefreshTokenService {
         User user = userRepository.findByLoginId(username).get();
         String token = UUID.randomUUID().toString();
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setTokenId(token);
+        refreshToken.setToken(token);
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(java.time.Instant.now().plusSeconds(60 * 60 * 24 * 7)); // 7 days
         refreshTokenRepository.save(refreshToken);
         return refreshToken;
     }
 
-    public Optional<RefreshToken> findByTokenId(String tokenId){
-        return refreshTokenRepository.findByTokenId(tokenId);
+    public Optional<RefreshToken> findByToken(String token){
+        return refreshTokenRepository.findByToken(token);
     }
 
     public RefreshToken verifyTokenExpiration(RefreshToken token){

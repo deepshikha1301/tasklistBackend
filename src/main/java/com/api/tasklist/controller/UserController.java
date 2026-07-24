@@ -65,7 +65,7 @@ public class UserController {
     @PostMapping("/refreshToken")
     public ResponseEntity<?> refreshToken(@CookieValue(name="refresh_token") String refreshToken){
         logger.info("refresh token request------" + refreshToken);
-        return refreshTokenService.findByTokenId(refreshToken)
+        return refreshTokenService.findByToken(refreshToken)
                 .map(refreshTokenService::verifyTokenExpiration)
                 .map(
                         token -> {
