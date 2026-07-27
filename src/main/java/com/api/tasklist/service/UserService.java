@@ -69,7 +69,7 @@ public class UserService implements UserDetailsService {
                     new UsernamePasswordAuthenticationToken(req.loginId(), req.password())
                 );
         if(authentication.isAuthenticated()){
-            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.loginId());
+            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(req.loginId(), true);
             String accessToken = jwtService.generateToken(req.loginId());
             return Map.of("access_token", accessToken, "refresh_token", refreshToken.getToken());
         }

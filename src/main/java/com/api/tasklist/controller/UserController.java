@@ -44,13 +44,7 @@ public class UserController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req){
         logger.info("Received login request: loginId={}", req.loginId());
         Map<String, String> result = userService.login(req);
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", result.get("refresh_token"))
-                .httpOnly(true)
-                .secure(false) // only for dev environment
-                .path("/api/users/refreshToken")
-                .maxAge(7 * 24 * 60 * 60) // 7 days
-                .sameSite("Strict")
-                .build();
+        ResponseCookie cookie = setRefeshTokenCookie(result.get("refresh_token"));
         if("Failed".equals(result.get("access_token"))){
             logger.warn("Login request failed");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
@@ -70,12 +64,25 @@ public class UserController {
                 .map(
                         token -> {
                             String newAccessToken = jwtService.generateToken(token.getUser().getLoginId());
+                            ResponseCookie cookie = setRefeshTokenCookie(token.getToken());
                             logger.info("Access token refreshed successfully for user: loginId={}", token.getUser().getLoginId());
-                            return ResponseEntity.ok(Map.of("access_token", newAccessToken));
+                            return ResponseEntity.ok()
+                                    .header("Set-Cookie", cookie.toString())
+                                    .body(Map.of("access_token", newAccessToken));
                         }).orElseThrow(()-> {
                             logger.warn("Refresh token not found or expired: refreshTokenId={}", refreshToken);
                             return new RuntimeException("Refresh token not found or expired, please login again");
                         });
+    }
+
+    private ResponseCookie setRefeshTokenCookie(String refreshToken ){
+        return ResponseCookie.from("refresh_token", refreshToken)
+                .httpOnly(true)
+                .secure(false) // only for dev environment
+                .path("/api/users/refreshToken")
+                .maxAge(7 * 24 * 60 * 60) // 7 days
+                .sameSite("Strict")
+                .build();
     }
 }
 

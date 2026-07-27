@@ -20,14 +20,19 @@ public class RefreshTokenService {
         this.userRepository = userRepository;
     }
 
-    public RefreshToken generateRefreshToken(String username){
+    public RefreshToken generateRefreshToken(String username, boolean isFirstToken){
         User user = userRepository.findByLoginId(username).get();
         String token = UUID.randomUUID().toString();
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(token);
         refreshToken.setUser(user);
         refreshToken.setExpiryDate(java.time.Instant.now().plusSeconds(60 * 60 * 24 * 7)); // 7 days
-        refreshTokenRepository.save(refreshToken);
+        if(isFirstToken){
+            refreshTokenRepository.save(refreshToken);
+        }else{
+            refreshTokenRepository.setNewToken(refreshToken.getToken(), username);
+        }
+
         return refreshToken;
     }
 
@@ -39,6 +44,8 @@ public class RefreshTokenService {
         if (token.getExpiryDate().isBefore(java.time.Instant.now())) {
             refreshTokenRepository.delete(token);
             throw new IllegalArgumentException("Refresh token has expired, please login again");
+        }else {
+            token = generateRefreshToken(token.getUser().getLoginId(), false);
         }
         return token;
     }
