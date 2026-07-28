@@ -1,4 +1,7 @@
 package com.api.tasklist.dto;
 
-public record LoginRequest(String loginId, String password) {}
+import jakarta.validation.constraints.NotBlank;
+
+public record LoginRequest(@NotBlank(message="loginId cannot be blank") String loginId,
+                           @NotBlank(message="password cannot be blank") String password) {}
 

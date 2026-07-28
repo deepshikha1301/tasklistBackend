@@ -1,4 +1,9 @@
 package com.api.tasklist.dto;
 
-public record RegisterRequest(String email, String loginId, String password) {}
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public record RegisterRequest(@Email(message="Invalid email") String email,
+                              @NotBlank(message="loginId cannot be blank") String loginId,
+                              @NotBlank(message="password cannot be blank") String password) {}
 

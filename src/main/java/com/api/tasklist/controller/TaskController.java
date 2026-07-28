@@ -4,6 +4,7 @@ import com.api.tasklist.dto.TaskRequest;
 import com.api.tasklist.entity.Task;
 import com.api.tasklist.service.TaskService;
 import com.api.tasklist.service.UserService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> addTask(@RequestBody TaskRequest req) {
+    public ResponseEntity<Task> addTask(@Valid @RequestBody TaskRequest req) {
         logger.info("Add task={} for loginId={}", req.taskName(), req.loginId());
         try{
             Task created = taskService.createTask(req.loginId(), req.taskName());
@@ -45,7 +46,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest req) {
+    public ResponseEntity<Task> updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest req) {
         try{
             return taskService.updateTask(id, req.taskName())
                     .map(ResponseEntity::ok)
@@ -57,9 +58,9 @@ public class TaskController {
 
     }
 
-    @DeleteMapping("/delete")
+    @DeleteMapping
     public ResponseEntity<Void> deleteTaskByLoginIdAndTaskName(
-            @RequestBody TaskRequest req) {
+            @Valid @RequestBody TaskRequest req) {
         logger.info("Delete task={} for loginId={}", req.taskName(), req.loginId());
         try {
             if (taskService.deleteTaskByLoginIdAndTaskName(req.loginId(), req.taskName())) {
